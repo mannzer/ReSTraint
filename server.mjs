@@ -16,14 +16,17 @@ const logo =
 const PORT = parseInt(process.env.PORT) || 80,
 	{ DEBUG } = process.env;
 
-const flow = (...args) => args.reduce((prev, current) => Promise.resolve(prev).then(current));
+const flow = (...args) => args.reduce((prev, current) => Promise.resolve(prev).then(current)),
+	waitAll = Promise.all.bind(Promise);
 
 const sanitize = path => './paths/' + path.replace(/\.\./g, '.').replace(/^\//, '');
 
 const workers = Math.max(2, os.cpus().length);
 
-const checkAuthorized = ([authFn, authArg]) => {
-	if (authFn && authFn(authArg)) return true;
+const checkAuthorized = jso => authFn => {
+	const authorization = authFn && authFn(jso.authorization);
+
+	if (authorization) return { ...jso, authorization };
 
 	const error = new Error();
 	error.message = authFn ? 'Not Authorized' : 'Not Found';
@@ -31,12 +34,13 @@ const checkAuthorized = ([authFn, authArg]) => {
 	return Promise.reject(error);
 };
 
-const loadPath = path => (authorization, jso, res) =>
+const loadPath = path => (jso, res) =>
 	flow(
-		[authorize[path], authorization],
-		checkAuthorized,
-		() => require(sanitize(path + '.mjs')), //
-		module => module.default(jso, res)
+		authorize[path],
+		checkAuthorized(jso),
+		data => [data, require(sanitize(path + '.mjs'))], //
+		waitAll,
+		([data, module]) => module.default(data, res)
 	);
 
 const tryJsonParse = json =>
@@ -94,6 +98,8 @@ if (cluster.isMaster && !DEBUG) {
 				{ authorization } = req.headers,
 				route = join(url.pathname, method);
 
+			const queryParams = Object.fromEntries(url.searchParams);
+
 			if (!authorization) {
 				const error = new Error('Authorization Required');
 				error.status = 401;
@@ -105,11 +111,12 @@ if (cluster.isMaster && !DEBUG) {
 				flow(
 					chunks.join('') || decodeURIComponent(url.searchParams.getAll('json')), //
 					tryJsonParse,
+					data => ({...queryParams, ...data, authorization}),
 					data =>
 						flow(
 							route,
 							loadPath,
-							handler => handler(authorization, data, res),
+							handler => handler(data, res),
 							val => val !== undefined && flow(val, JSON.stringify, sendResponse(res))
 						)
 				).catch(errorHandler(res))
