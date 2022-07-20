@@ -18,10 +18,10 @@ test () { ! got=$($1) && ok || fail; [[ ! -z $got ]] && echo " $1: $got" || echo
 allowGETWithoutPayload() { curl -w "%{http_code}" -so /dev/null http://localhost:$PORT/tests/echo -H "authorization: anon"| grep -v 200; }
 test allowGETWithoutPayload
 
-onlyJSON() { curl -w "%{http_code}" -so /dev/null http://localhost:$PORT/tests/echo -d "not JSON" -H "authorization: 1" | grep -v 400; }
+onlyJSON() { curl -w "%{http_code}" -so /dev/null -X GET http://localhost:$PORT/tests/echo -d "not JSON" -H "authorization: 1" | grep -v 400; }
 test onlyJSON
 
-requireAuthorizationHeader() { curl -w "%{http_code}" -so /dev/null http://localhost:$PORT/echo -d "{}" | grep -v 401; }
+requireAuthorizationHeader() { curl -w "%{http_code}" -so /dev/null -X GET http://localhost:$PORT/tests/echo -d "{}" | grep -v 401; }
 test requireAuthorizationHeader
 
 validAuthorizationWorks() { curl -w "%{http_code}" -so /dev/null -X GET http://localhost:$PORT/tests/echo -d "{}" -H "authorization: anon" | grep -v 200; }
@@ -38,5 +38,11 @@ test basicEcho
 
 queryStringEcho() { curl -w "%{http_code}" -s -X GET "http://localhost:$PORT/tests/echo?world=1-1" -d '{"hello":"world"}' -H "authorization: anon" | grep -v '{"world":"1-1","hello":"world","authorization":true}200'; }
 test queryStringEcho
+
+idsInURLViolence() { curl -w "%{http_code}" -s -X GET "http://localhost:$PORT/tests/1/echo" -d '{"hello":"world"}' -H "authorization: anon" | grep -v '{"testsid":"1","hello":"world","authorization":true}200'; }
+test idsInURLViolence
+
+idsInURLClobber() { curl -w "%{http_code}" -s -X GET "http://localhost:$PORT/tests/1/echo?testsid=777" -d '{"hello":"world"}' -H "authorization: anon" | grep -v '{"testsid":"777","hello":"world","authorization":true}200'; }
+test idsInURLClobber
 
 kill $PID

@@ -4,7 +4,7 @@ import authorize from './authorize.mjs';
 import cluster from 'cluster';
 import color from './color.mjs';
 import http from 'http';
-import { join } from 'path';
+import { join, sep } from 'path';
 import os from 'os';
 
 const require = path => import(path);
@@ -96,7 +96,14 @@ if (cluster.isMaster && !DEBUG) {
 				chunks = [],
 				method = req.method.toLowerCase(),
 				{ authorization } = req.headers,
-				route = join(url.pathname, method);
+				routeParts = join(url.pathname, method).split(sep)
+					.map((part, idx, list) =>
+						'0123456789'.includes(part[0])
+						? [list[idx - 1] + 'id', part]
+						: part
+					),
+				route = routeParts.filter(part => typeof part === 'string').join(sep),
+				routeParams = Object.fromEntries(routeParts.filter(Array.isArray));
 
 			const queryParams = Object.fromEntries(url.searchParams);
 
@@ -111,7 +118,7 @@ if (cluster.isMaster && !DEBUG) {
 				flow(
 					chunks.join('') || decodeURIComponent(url.searchParams.getAll('json')), //
 					tryJsonParse,
-					data => ({...queryParams, ...data, authorization}),
+					data => ({...routeParams, ...queryParams, ...data, authorization}),
 					data =>
 						flow(
 							route,
