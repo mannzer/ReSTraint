@@ -33,7 +33,10 @@ test invalidAuthorizationFails
 missingIs404() { curl -w "%{http_code}" -so /dev/null -X GET http://localhost:$PORT/tests/missing -d "{}" -H "authorization: anon" | grep -v 404; }
 test missingIs404
 
-echoWorks() { curl -w "%{http_code}" -s -X GET http://localhost:$PORT/tests/echo -d '{"hello":"world"}' -H "authorization: anon" | grep -v '{"hello":"world"}200'; }
-test echoWorks
+basicEcho() { curl -w "%{http_code}" -s -X GET http://localhost:$PORT/tests/echo -d '{"hello":"world"}' -H "authorization: anon" | grep -v '{"hello":"world"}200'; }
+test basicEcho
+
+queryStringEcho() { curl -w "%{http_code}" -s -X GET "http://localhost:$PORT/tests/echo" -d '{"hello":"world"}' -H "authorization: anon" | grep -v '{"hello":"world"}200'; }
+basicEcqueryStringEchoho
 
 kill $PID
