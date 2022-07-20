@@ -1,0 +1,27 @@
+{
+  "name": "restraint",
+  "version": "0.0.0",
+  "description": "minimal opinionated RESTful AJaX(J?) API server",
+  "main": "server.js",
+  "scripts": {
+    "test": "test.sh",
+    "start": "node server.mjs"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mannzer/ReSTraint.git"
+  },
+  "keywords": [
+    "REST",
+    "API",
+    "server",
+    "autosql",
+    "minimal"
+  ],
+  "author": "mannzer",
+  "license": "GPL-3.0-or-later",
+  "bugs": {
+    "url": "https://github.com/mannzer/ReSTraint/issues"
+  },
+  "homepage": "https://github.com/mannzer/ReSTraint#readme"
+}
