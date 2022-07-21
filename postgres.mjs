@@ -9,11 +9,11 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const hash = plainText => crypto.createHash('sha384').update(plainText, 'utf8').digest('base64');
 
 const paramRegex = /(@[^,;\s:()]+)/g,
-	jsoKey = key => key.replace(/^@|!$/g, '');
+	valuesKey = key => key.replace(/^@|!$/g, '');
 
-const query = (pool, sqlText, jso) => {
-	if (jso.key) jso.key = hash(jso.key);
-	if (jso.token) jso.key = hash(jso.token);
+const query = (pool, sqlText, values) => {
+	if (values.key) values.key = hash(values.key);
+	if (values.token) values.key = hash(values.token);
 
 	const paramOrderMap = Object.fromEntries(
 			Object.keys(
@@ -23,10 +23,10 @@ const query = (pool, sqlText, jso) => {
 			).map((param, idx) => [param, idx])
 		),
 		paramsInOrder = Object.keys(paramOrderMap),
-		paramArray = paramsInOrder.map(key => jso[jsoKey(key)] ?? null),
+		paramArray = paramsInOrder.map(key => values[valuesKey(key)] ?? null),
 		missingParams = paramsInOrder
-			.filter(param => param.endsWith('!') && jso[jsoKey(param)] === undefined)
-			.map(jsoKey),
+			.filter(param => param.endsWith('!') && values[valuesKey(param)] === undefined)
+			.map(valuesKey),
 		parameterizedSql = sqlText.replace(paramRegex, (match, param) => '$' + (paramOrderMap[param] + 1));
 
 	if (missingParams.length)
@@ -54,5 +54,5 @@ export default ({ connectionInfo, path }) => {
 
 	const queryCache = {};
 
-	return (fname, jso) => queryText(queryCache, path, fname).then(text => query(pool, text, jso));
+	return (fname, values) => queryText(queryCache, path, fname).then(text => query(pool, text, values));
 }; // exports
