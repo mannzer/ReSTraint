@@ -49,7 +49,7 @@ const queryText = (queryCache, path, fname) =>
 		.then(() => queryCache[fname] || readFile(`${__dirname}/${path}/${fname}.sql`, 'utf-8'))
 		.then(text => (queryCache[fname] = text));
 
-export default ({ connectionInfo, path }) => {
+export default ({ connectionInfo, path = '' }) => {
 	const pool = new pg.Pool(connectionInfo);
 
 	const queryCache = {};

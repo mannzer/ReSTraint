@@ -11,9 +11,6 @@
 	key => token
 	Authorization header: token [token]
 
-###	other paths && 404 && anything that sends a token
-	refresh token
-		
 ## 1 path per file, 1 possible location
 ### args are condensed into function arguments
 	verb /foo/###/bar/###/baz/###?qux=###&quux=###&corge=### 

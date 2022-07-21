@@ -10,7 +10,7 @@ import http from 'http';
 import os from 'os';
 import postgres from './postgres.mjs';
 
-const query = postgres({ connectionInfo, path: 'paths' });
+const query = postgres({ connectionInfo });
 
 const require = path => import(path);
 
@@ -30,7 +30,7 @@ const workers = Math.max(2, os.cpus().length);
 
 const checkAuthorized = jso => async authFn => {
 	// eslint-disable-next-line no-extra-parens
-	const authorization = authFn && (await authFn(jso.authorization));
+	const authorization = authFn && (await authFn(Object.fromEntries([jso.authorization.split(' ')])));
 
 	if (authorization) return { ...jso, authorization };
 
@@ -49,7 +49,7 @@ const loadPath = path => (jso, res) =>
 		([data, module]) => module.default(data, res)
 	).catch(err =>
 		err.code === 'ERR_MODULE_NOT_FOUND'
-			? query(sanitize(path), jso) //
+			? query('./paths/' + sanitize(path), jso) //
 					.catch(error =>
 						Promise.reject(
 							DEBUG ? error : typeof error === 'string' ? error : 'There was an error with your request.'

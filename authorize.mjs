@@ -1,4 +1,4 @@
-const allowAnon = authorization => authorization === 'anon';
+const allowAnon = ({ key }) => key === 'anon' && { key: 'anon' };
 
 export default {
 	'/tests/echo/get': allowAnon,
