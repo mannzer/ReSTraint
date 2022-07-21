@@ -1,5 +1,12 @@
 #! /bin/bash
 
+
+# expected exports
+# PGSQL_USER
+# PGSQL_PASS
+# PGSQL_HOST
+# PGSQL_DB
+
 echo 'Starting Tests'
 
 lsof -i :8000 | grep -Po '\d+' | head -1 | xargs kill &> /dev/null
@@ -14,6 +21,9 @@ sleep 0.5
 ok () { echo -ne '\t\x1b[32m✓\x1b[0m'; }
 fail () { echo -ne '\t\x1b[31m✗\x1b[0m'; }
 test () { ! got=$($1) && ok || fail; [[ ! -z $got ]] && echo " $1: $got" || echo " $1"; }
+
+pathsAreSecuredAgainstDot() { curl -w "%{http_code}" -so /dev/null http://localhost:$PORT/../../../../tests/echo -H "authorization: anon"| grep -v 200; }
+test pathsAreSecuredAgainstDot
 
 allowGETWithoutPayload() { curl -w "%{http_code}" -so /dev/null http://localhost:$PORT/tests/echo -H "authorization: anon"| grep -v 200; }
 test allowGETWithoutPayload
@@ -44,5 +54,8 @@ test idsInURLViolence
 
 idsInURLClobber() { curl -w "%{http_code}" -s -X GET "http://localhost:$PORT/tests/1/echo?testsid=777" -d '{"hello":"world"}' -H "authorization: anon" | grep -v '{"testsid":"777","hello":"world","authorization":true}200'; }
 test idsInURLClobber
+
+pgSqlParametersWork() { curl -w "%{http_code}" -s -X GET "http://localhost:$PORT/tests/cities?search=Be" -H "authorization: anon" | grep -vF '[{"cityid":1,"name":"Belgrade","urbanarea":1035,"metroarea":3223,"urbanpop":1344844,"metropop":1687132},{"cityid":2,"name":"Berlin","urbanarea":892,"metroarea":30370,"urbanpop":4473101,"metropop":6144600}]200'; }
+test pgSqlParametersWork
 
 kill $PID

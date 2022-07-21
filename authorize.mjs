@@ -1,3 +1,6 @@
+const allowAnon = authorization => authorization === 'anon';
+
 export default {
-	'/tests/echo/get': authorization => authorization === 'anon',
+	'/tests/echo/get': allowAnon,
+	'/tests/cities/get': allowAnon,
 };
