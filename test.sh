@@ -58,4 +58,10 @@ test idsInURLClobber
 pgSqlParametersWork() { curl -w "%{http_code}" -s -X GET "http://localhost:$PORT/tests/cities?search=Be" -H "authorization: anon" | grep -vF '[{"cityid":1,"name":"Belgrade","urbanarea":1035,"metroarea":3223,"urbanpop":1344844,"metropop":1687132},{"cityid":2,"name":"Berlin","urbanarea":892,"metroarea":30370,"urbanpop":4473101,"metropop":6144600}]200'; }
 test pgSqlParametersWork
 
+optionalPGSqlParametersWork() { curl -w "%{http_code}" -s -X GET "http://localhost:$PORT/tests/cities/3" -H "authorization: anon" | grep -vF '[{"cityid":3,"name":"Budapest","urbanarea":2538,"metroarea":7626,"urbanpop":2997958,"metropop":3011598}]200'; }
+test optionalPGSqlParametersWork
+
+requiredPGSqlParametersNotifyIfMissing() { curl -w "%{http_code}" -s -X POST "http://localhost:$PORT/tests/cities/3" -d '{"name":"moon","urbanarea":0,"metroarea":0,"urbanpop":0}' -H "authorization: anon" | grep -vF '"Missing required parameters: metropop"400'; }
+test requiredPGSqlParametersNotifyIfMissing
+
 kill $PID

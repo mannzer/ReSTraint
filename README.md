@@ -32,3 +32,5 @@
 ## path to file mapping
 	check for path mjs, sql
 		autosql postgres + pg with named parameters from object keys
+		missing params default to null
+		required parameters end with !

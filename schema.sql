@@ -1,7 +1,7 @@
 drop table if exists cities;
 create table cities (
 	cityid serial,
-	name text not null,
+	name text not null unique,
 	urbanarea int,
 	metroarea int,
 	urbanpop int,

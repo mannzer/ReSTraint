@@ -8,25 +8,29 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 
 const hash = plainText => crypto.createHash('sha384').update(plainText, 'utf8').digest('base64');
 
+const paramRegex = /(@[^,;\s:()]+)/g,
+	jsoKey = key => key.replace(/^@|!$/g, '');
+
 const query = (pool, sqlText, jso) => {
 	if (jso.key) jso.key = hash(jso.key);
 	if (jso.token) jso.key = hash(jso.token);
 
 	const paramOrderMap = Object.fromEntries(
 			Object.keys(
-				[...sqlText.matchAll(/@[^,;\s:]+/g)]
+				[...sqlText.matchAll(paramRegex)]
 					.map(match => match[0])
 					.reduce((prev, next) => Object.assign(prev, { [next]: true }), {})
 			).map((param, idx) => [param, idx])
 		),
 		paramsInOrder = Object.keys(paramOrderMap),
-		paramArray = paramsInOrder.map(key => jso[key.slice(1)]),
-		missingParams = paramArray
-			.map((item, idx) => (item === undefined ? paramsInOrder[idx] : false))
-			.filter(Boolean),
-		parameterizedSql = sqlText.replace(/(@[^,;\s:]+)/g, (match, param) => '$' + (paramOrderMap[param] + 1));
+		paramArray = paramsInOrder.map(key => jso[jsoKey(key)] ?? null),
+		missingParams = paramsInOrder
+			.filter(param => param.endsWith('!') && jso[jsoKey(param)] === undefined)
+			.map(jsoKey),
+		parameterizedSql = sqlText.replace(paramRegex, (match, param) => '$' + (paramOrderMap[param] + 1));
 
-	if (missingParams.length) return Promise.reject('Missing required parameters: ' + missingParams.join(', '));
+	if (missingParams.length)
+		return Promise.reject('Missing required parameters: ' + missingParams.join(', '));
 
 	return pool.connect().then(client =>
 		client
