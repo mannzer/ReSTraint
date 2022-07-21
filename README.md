@@ -34,3 +34,19 @@
 		autosql postgres + pg with named parameters from object keys
 		missing params default to null
 		required parameters end with !
+
+```sql
+select cityid, name, urbanarea, metroarea, urbanpop, metropop
+from cities
+where name like @search || '%'
+	or cityid = @citiesid
+;
+```
+	@search and @citiesid are optional
+```sql
+insert into cities (name, urbanarea, metroarea, urbanpop, metropop)
+values 
+	(@name!, @urbanarea!, @metroarea!, @urbanpop!, @metropop!)
+;
+```
+	@name!, @urbanarea!, @metroarea!, @urbanpop!, @metropop! are all required
